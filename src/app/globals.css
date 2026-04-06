@@ -1,26 +1,187 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --navy: #0B1623;
+  --navy-mid: #112031;
+  --navy-light: #162840;
+  --gold: #C9922A;
+  --gold-light: #DBA94A;
+  --white: #ffffff;
+  --off-white: #f5f5f3;
+  --text-muted: #8a9ab5;
+  --transition: 175ms cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--navy);
+  color: var(--white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typewriter cursor */
+.typewriter-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 0.9em;
+  background-color: var(--gold);
+  margin-left: 4px;
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* CTA button — filled gold */
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--gold);
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  transition: background-color var(--transition), gap var(--transition);
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-cta:hover {
+  background-color: var(--gold-light);
+  gap: 18px;
+}
+
+/* CTA button — outline */
+.btn-cta-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: transparent;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 13px 27px;
+  border: 1px solid var(--gold);
+  transition: background-color var(--transition), color var(--transition), gap var(--transition);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-cta-outline:hover {
+  background-color: var(--gold);
+  color: var(--navy);
+  gap: 18px;
+}
+
+/* Section label above headings */
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+
+/* Nav link with expanding underline */
+.nav-link {
+  position: relative;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0%;
+  height: 1px;
+  background-color: var(--gold);
+  transition: width var(--transition);
+}
+
+.nav-link:hover {
+  color: var(--white);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Criteria card */
+.criteria-card {
+  border: 1px solid rgba(201, 146, 42, 0.2);
+  padding: 2rem;
+  background-color: rgba(255, 255, 255, 0.02);
+  transition: border-color var(--transition), transform var(--transition);
+}
+
+.criteria-card:hover {
+  border-color: var(--gold);
+  transform: scale(1.02);
+}
+
+/* Expect item */
+.expect-item {
+  border-left: 2px solid rgba(201, 146, 42, 0.3);
+  padding-left: 1.5rem;
+  transition: border-color var(--transition);
+}
+
+.expect-item:hover {
+  border-left-color: var(--gold);
+}
+
+/* Form inputs — borderless, underline only */
+.form-input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 10px 0;
+  color: var(--white);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--transition);
+  font-family: inherit;
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.form-input:focus {
+  border-bottom-color: var(--gold);
+}
+
+select.form-input option {
+  background-color: var(--navy-mid);
+  color: var(--white);
+}
+
+/* Divider line */
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(201, 146, 42, 0.3), transparent);
 }
