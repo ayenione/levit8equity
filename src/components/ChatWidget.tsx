@@ -43,6 +43,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -54,7 +55,25 @@ export default function ChatWidget() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, typing]);
+
+  async function fetchResponse(history: Message[]): Promise<string> {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: history }),
+    });
+    if (!res.ok || !res.body) throw new Error("Request failed");
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let accumulated = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      accumulated += decoder.decode(value, { stream: true });
+    }
+    return accumulated;
+  }
 
   async function send() {
     const text = input.trim();
@@ -65,33 +84,17 @@ export default function ChatWidget() {
     setMessages(history);
     setInput("");
     setLoading(true);
-
-    const assistantMessage: Message = { role: "assistant", content: "" };
-    setMessages([...history, assistantMessage]);
+    setTyping(true);
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
-      });
-
-      if (!res.ok || !res.body) throw new Error("Request failed");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        accumulated += decoder.decode(value, { stream: true });
-        setMessages([
-          ...history,
-          { role: "assistant", content: accumulated },
-        ]);
-      }
+      const [response] = await Promise.all([
+        fetchResponse(history),
+        new Promise((resolve) => setTimeout(resolve, 10000)),
+      ]);
+      setTyping(false);
+      setMessages([...history, { role: "assistant", content: response as string }]);
     } catch {
+      setTyping(false);
       setMessages([
         ...history,
         {
@@ -266,31 +269,19 @@ export default function ChatWidget() {
               </div>
             ))}
 
-            {loading && messages[messages.length - 1]?.content === "" && (
+            {typing && (
               <div style={{ display: "flex", justifyContent: "flex-start" }}>
                 <div
                   style={{
                     padding: "0.65rem 0.9rem",
                     backgroundColor: "rgba(255,255,255,0.05)",
                     border: "1px solid rgba(255,255,255,0.07)",
-                    display: "flex",
-                    gap: "4px",
-                    alignItems: "center",
+                    fontSize: "0.875rem",
+                    color: "var(--text-muted)",
+                    fontStyle: "italic",
                   }}
                 >
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      style={{
-                        width: "6px",
-                        height: "6px",
-                        borderRadius: "50%",
-                        backgroundColor: "var(--text-muted)",
-                        display: "inline-block",
-                        animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
-                      }}
-                    />
-                  ))}
+                  Typing....
                 </div>
               </div>
             )}
