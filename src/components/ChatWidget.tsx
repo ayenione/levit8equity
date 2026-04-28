@@ -38,12 +38,16 @@ const GREETING: Message = {
     "Hi — I'm here to answer any questions you have about selling your business to Levit8 Equity. What's on your mind?",
 };
 
+const CHARS_PER_SECOND = 35;
+const TICK_MS = 30;
+const CHARS_PER_TICK = Math.ceil(CHARS_PER_SECOND * (TICK_MS / 1000));
+
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [typing, setTyping] = useState(false);
+  const [showTyping, setShowTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -55,7 +59,7 @@ export default function ChatWidget() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading, typing]);
+  }, [messages, loading, showTyping]);
 
   async function fetchResponse(history: Message[]): Promise<string> {
     const res = await fetch("/api/chat", {
@@ -75,6 +79,21 @@ export default function ChatWidget() {
     return accumulated;
   }
 
+  function revealText(text: string, history: Message[]) {
+    return new Promise<void>((resolve) => {
+      let index = 0;
+      setMessages([...history, { role: "assistant", content: "" }]);
+      const interval = setInterval(() => {
+        index = Math.min(index + CHARS_PER_TICK, text.length);
+        setMessages([...history, { role: "assistant", content: text.slice(0, index) }]);
+        if (index >= text.length) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, TICK_MS);
+    });
+  }
+
   async function send() {
     const text = input.trim();
     if (!text || loading) return;
@@ -84,17 +103,22 @@ export default function ChatWidget() {
     setMessages(history);
     setInput("");
     setLoading(true);
-    setTyping(true);
 
     try {
+      // Fetch and 10s silence run in parallel
       const [response] = await Promise.all([
         fetchResponse(history),
         new Promise((resolve) => setTimeout(resolve, 10000)),
       ]);
-      setTyping(false);
-      setMessages([...history, { role: "assistant", content: response as string }]);
+
+      // Show "Typing...." briefly before reveal
+      setShowTyping(true);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setShowTyping(false);
+
+      await revealText(response as string, history);
     } catch {
-      setTyping(false);
+      setShowTyping(false);
       setMessages([
         ...history,
         {
@@ -269,7 +293,7 @@ export default function ChatWidget() {
               </div>
             ))}
 
-            {typing && (
+            {showTyping && (
               <div style={{ display: "flex", justifyContent: "flex-start" }}>
                 <div
                   style={{
